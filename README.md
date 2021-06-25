@@ -1,70 +1,148 @@
-# Getting Started with Create React App
+## Rotas e navegação
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Para nos ajudar com a navegação entre diferentes páginas no nosso webapp, vamos usar a ferramenta `react-router-dom`. Primeiro, precisamos instalar o pacote:
 
-## Available Scripts
+```bash
+$ npm install react-router-dom
+```
 
-In the project directory, you can run:
+Para podermos usar o React Router, precisamos de 2 componentes: um roteador e as rotas. Comumente usamos o `BrowserRouter` como roteador:
 
-### `npm start`
+```javascript
+import { BrowserRouter, Route } from "react-router-dom";
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+> Lembrando que a sintaxe com as chaves é apenas uma desestruturação de objeto (object destructuring)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Para as rotas funcionarem, elas sempre precisam estar dentro de um roteador. Um roteador pode ter várias rotas:
 
-### `npm test`
+```javascript
+//...
+import Homepage from "./Homepage";
+import About from "./About";
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+function App() {
+  return (
+    <div>
+      <BrowserRouter>
+        <Route exact path="/" component={Homepage} />
+        <Route path="/about" component={About} />
+      </BrowserRouter>
+    </div>
+  );
+}
 
-### `npm run build`
+export default App;
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+O componente `Route` sempre deve receber 2 props obrigatórias: a prop `path`, que determina qual rota na URL do navegador vai renderizar o componente, e a prop `component` que determina o componente a ser renderizado
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+> Note que a prop `component` recebe uma referência de componente, e não uma invocação, ou seja, sem o `< />`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Como a prop `path` por padrão compara o valor dela com o valor da URL de forma inclusiva (ou seja, se a URL inclui o valor de path), podemos ter bugs ao definir algum caracter ou palavra repetido em dois paths diferentes:
 
-### `npm run eject`
+```javascript
+//...
+import Homepage from "./Homepage";
+import About from "./About";
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+function App() {
+  return (
+    <div>
+      <BrowserRouter>
+        <Route path="/" component={Homepage} />
+        <Route path="/about" component={About} /> // Essa rota vai renderizar tanto
+        o Homepage, quanto o About, pois `/about` inclui `/`
+      </BrowserRouter>
+    </div>
+  );
+}
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+export default App;
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Para evitar isso, usamos a prop opcional `exact`
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```javascript
+//...
+import Homepage from "./Homepage";
+import About from "./About";
 
-## Learn More
+function App() {
+  return (
+    <div>
+      <BrowserRouter>
+        <Route path="/" component={Homepage} />
+        <Route path="/about" component={About} /> // Agora, Homepage só será renderizado
+        caso a URL do navegador seja exatamente `/`
+      </BrowserRouter>
+    </div>
+  );
+}
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+export default App;
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Componentes recorrentes em várias rotas e `<Link />`
 
-### Code Splitting
+Quando quisermos que um componente apareça em várias rotas diferentes (comum para cabeçalhos e rodapés, ou menus de navegação), basta renderizarmos esse componente fora de um `<Route />` que ele automaticamente aparecerá em todas as páginas:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```javascript
+function App() {
+  return (
+    <div>
+      <BrowserRouter>
+        <Navbar /> // Navbar aparecerá tanto em `/` quanto em `/about`
+        <Route exact path="/" component={Homepage} />
+        <Route path="/about" component={About} />
+      </BrowserRouter>
+    </div>
+  );
+}
+```
 
-### Analyzing the Bundle Size
+Para podermos navegar sem recarregar a página (que é o principal intuito de usar o React e a arquitetura SPA (Single Page Application)), precisamos usar um componente especial chamado `<Link>`, que substitui as tags `<a></a>`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```javascript
+import { Link } from "react-router-dom";
+// ...
+//... Código do componente Navbar
+<ul className="navbar-nav">
+  <li className="nav-item">
+    <Link className="nav-link" to="/">
+      Home
+    </Link>
+  </li>
+  <li className="nav-item">
+    <Link className="nav-link" to="/about">
+      About
+    </Link>
+  </li>
+</ul>;
+//...
+```
 
-### Making a Progressive Web App
+> No componente `<Link>`, usamos a prop `to` no lugar do atributo `href`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+> OBS.: O componente `<Link>` deve ser usado apenas em navegações internas, ou seja, dentro do nosso próprio site. Caso você queira redirecionar para algum site externo, utilize o `<a></a>` normalmente.
 
-### Advanced Configuration
+Podemos usar o componente `<NavLink>` para links de navegação, pois o `<NavLink>` possui a prop `activeClassname`, que nos permite colocar uma classe do CSS para destacar o link que usuário está nesse momento. Aqui usamos a classe do CSS `active`, que vem do Bootstrap, para destacar o link atual da aplicação:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```javascript
+import { Link, NavLink } from "react-router-dom";
+// ...
+//... Código do componente Navbar
+<ul className="navbar-nav">
+  <li className="nav-item">
+    <NavLink activeClassName="active" className="nav-link" to="/">
+      Home
+    </NavLink>
+  </li>
+  <li className="nav-item">
+    <NavLink activeClassName="active" className="nav-link" to="/about">
+      About
+    </NavLink>
+  </li>
+</ul>;
+//...
+```
