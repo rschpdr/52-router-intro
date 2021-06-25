@@ -34,6 +34,15 @@ function Navbar() {
                 About
               </NavLink>
             </li>
+            <li className="nav-item">
+              <NavLink
+                activeClassName="active"
+                className="nav-link"
+                to="/projects"
+              >
+                Projects
+              </NavLink>
+            </li>
           </ul>
         </div>
       </div>
